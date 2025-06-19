@@ -24,6 +24,12 @@
         <TextBox x:Name="tbFourthX2" HorizontalAlignment="Left" Margin="373,266,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
         <TextBox x:Name="tbFifthX2" HorizontalAlignment="Left" Margin="373,297,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
         <TextBox x:Name="tbSixthX2" HorizontalAlignment="Left" Margin="373,328,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
-        <Button x:Name="btnInterpol" Content="Выбрать файл" HorizontalAlignment="Center" Margin="0,371,0,0" Click="btnInterpol_Click"  VerticalAlignment="Top" Height="30" Width="120"/>
+        <Button x:Name="btnInterpol" Content="Выполнить интерполяцию" HorizontalAlignment="Center" Margin="0,366,0,0" Click="btnInterpol_Click"  VerticalAlignment="Top" Height="30" Width="164"/>
+        <Button x:Name="btnFileOpen" Content="Открыть файл в редакторе" HorizontalAlignment="Left" Margin="236,401,0,0" Click="btnFileOpen_Click"  VerticalAlignment="Top" Height="30" Width="164"/>
+        <Button x:Name="btnReadFile" Content="Просмотреть файл" HorizontalAlignment="Left" Margin="405,401,0,0" Click="btnReadFile_Click"  VerticalAlignment="Top" Height="30" Width="164"/>
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
+              HorizontalAlignment="Left" Margin="585,66,0,131" Width="189">
+            <TextBlock x:Name="tblTextFile" TextWrapping="NoWrap" FontFamily="Consolas" xml:space="preserve" Height="245"/>
+        </ScrollViewer>
     </Grid>
 </Page>

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 
 namespace Praktika.Pages
 {
@@ -314,6 +316,26 @@ namespace Praktika.Pages
             }
 
             MessageBox.Show("Интерполяция выполнена успешно");            
+        }
+
+        private void btnFileOpen_Click(object sender, RoutedEventArgs e)
+        {
+            string path = $@"C:\Users\Mickey\Desktop\{1 + fileName}";
+            Process.Start(new ProcessStartInfo { FileName = "explorer", Arguments = $"/n,select,{path}" });
+        }
+
+        private void btnReadFile_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string filePath = $@"C:\Users\Mickey\Desktop\{fileName}"; // Убедитесь, что fileName — строка, например, "example.txt"
+                string fullText = File.ReadAllText(filePath, Encoding.UTF8);
+                tblTextFile.Text = fullText;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при чтении файла: {ex.Message}");
+            }
         }
     }
 }
