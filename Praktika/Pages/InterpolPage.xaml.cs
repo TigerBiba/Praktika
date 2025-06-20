@@ -26,8 +26,10 @@ namespace Praktika.Pages
         private void btnOpenFile_Click(object sender, RoutedEventArgs e)
         {
             Microsoft.Win32.OpenFileDialog dialog = new Microsoft.Win32.OpenFileDialog();
+
             dialog.Filter = "Text documents (*.txt)|*.txt";
             dialog.FilterIndex = 1;
+            dialog.InitialDirectory = "Protocols\\";
 
             Nullable<bool> result = dialog.ShowDialog();
 
@@ -168,7 +170,7 @@ namespace Praktika.Pages
             }
 
             using (StreamReader sr = new StreamReader(fileDirectory, Encoding.UTF8))
-            using (StreamWriter sw = new StreamWriter($@"C:\Users\Mickey\Desktop\{1 + fileName}", false, Encoding.UTF8))
+            using (StreamWriter sw = new StreamWriter($@"Protocols/{"Interpolate_protocol_" + fileName}", false, Encoding.UTF8))
             {
                 bool isTable = false;
                 int resultIndex = 0; // Индекс для прохода по interpolatedResults
@@ -315,21 +317,21 @@ namespace Praktika.Pages
                 }
             }
 
+            fileDirectory = $@"Protocols/{"Interpolate_protocol_" + fileName}";
+
             MessageBox.Show("Интерполяция выполнена успешно");            
         }
 
         private void btnFileOpen_Click(object sender, RoutedEventArgs e)
         {
-            string path = $@"C:\Users\Mickey\Desktop\{1 + fileName}";
-            Process.Start(new ProcessStartInfo { FileName = "explorer", Arguments = $"/n,select,{path}" });
+            Process.Start(new ProcessStartInfo { FileName = "explorer", Arguments = $"/n,select,{fileDirectory}" });
         }
 
         private void btnReadFile_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                string filePath = $@"C:\Users\Mickey\Desktop\{fileName}"; // Убедитесь, что fileName — строка, например, "example.txt"
-                string fullText = File.ReadAllText(filePath, Encoding.UTF8);
+                string fullText = File.ReadAllText(fileDirectory, Encoding.UTF8);
                 tblTextFile.Text = fullText;
             }
             catch (Exception ex)

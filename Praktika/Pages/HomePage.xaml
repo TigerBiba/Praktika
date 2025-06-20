@@ -17,5 +17,6 @@
         <TextBox x:Name="tbModelName" HorizontalAlignment="Center" Margin="0,214,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120"/>
         <Label Content="Введите номер модели" HorizontalAlignment="Left" Margin="339,188,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.07,-0.331"/>
         <Button x:Name="btnInterpol" Content="Интерполяция" HorizontalAlignment="Center" Margin="0,311,0,0" Width="122" Click="btnInterpol_Click"  Height="34" VerticalAlignment="Top"/>
+        <Button x:Name="btnInterpolSender" Content="Создать итоговый протокол" HorizontalAlignment="Center" Margin="0,362,0,0" Width="190" Click="btnInterpolSender_Click"  Height="34" VerticalAlignment="Top"/>
     </Grid>
 </Page>

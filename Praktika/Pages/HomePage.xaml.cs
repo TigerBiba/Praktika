@@ -103,8 +103,8 @@ namespace Praktika.Pages
 
                 // Запись отфильтрованного результата
                 using var sr = new StreamReader(fileDirectory, Encoding.UTF8);
-                using var sw = new StreamWriter($@"C:\Users\Mickey\Desktop\{filename}", false, Encoding.UTF8);
-                string pattern = @"(Protocol_Number\s+=\s+)|(ModelName\s+=\s+)|(ExpName\s+=\s+)|(PROTOCOL_DATE\s+=\s+)|(PROCESSING_DATE\s+=\s+)";
+                using var sw = new StreamWriter($"Protocols/{filename}", false);
+                string pattern = @"(Protocol_Number\s+=\s+)|(ModelName\s+=\s+)|(ExpName\s+=\s+)|(PROTOCOL_DATE\s+=\s+)|(AL:\s+\d{1,2})|(PROCESSING_DATE\s+=\s+)";
                 isTableSection = false;
                 int tableLineIndex = 0;
 
@@ -120,7 +120,7 @@ namespace Praktika.Pages
                             sw.WriteLine(m.Groups[1].Success ? $"Protocol_Number = {tbProtocolNumber.Text}" :
                                            m.Groups[2].Success ? $"ModelName = {tbModelName.Text}" :
                                            m.Groups[3].Success ? "ExpName = Практика" :
-                                           m.Groups[5].Success ? $"PROCESSING_DATE = {DateTime.Now}" : line);
+                                           m.Groups[6].Success ? $"PROCESSING_DATE = {DateTime.Now}" : line);
                         }
                         else if (line.TrimStart().StartsWith("N "))
                         {
@@ -181,6 +181,11 @@ namespace Praktika.Pages
         private void btnInterpol_Click(object sender, RoutedEventArgs e)
         {
             NavigationService.Navigate(new InterpolPage());
+        }
+
+        private void btnInterpolSender_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new InterpolSenderPage());
         }
     }
 }
