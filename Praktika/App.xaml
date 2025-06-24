@@ -4,6 +4,8 @@
              xmlns:local="clr-namespace:Praktika"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <BitmapImage x:Key="logo" UriSource="Resources\logo.png"></BitmapImage>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

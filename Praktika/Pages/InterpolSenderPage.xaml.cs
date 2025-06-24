@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,6 +27,7 @@ namespace Praktika.Pages
     {
         List<string> filesNames = new();
         List<string> filesDirectores = new();
+        Dictionary<string, int> filesAndLambda = new();
         public InterpolSenderPage()
         {
             InitializeComponent();
@@ -33,74 +35,170 @@ namespace Praktika.Pages
 
         private void btnEnterFiles_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dialog = new();
+            filesNames.Clear();
+            filesDirectores.Clear();
+            filesAndLambda.Clear();
 
-            dialog.Filter = "Text documents (*.txt)|*.txt";
-            dialog.FilterIndex = 1;
-            dialog.Multiselect = true;
-            dialog.InitialDirectory = "Protocols\\";
-
-            Nullable<bool> result = dialog.ShowDialog();
-
-            if (result == true)
+            try
             {
-                foreach (var filePath in dialog.FileNames)
-                {
-                    filesDirectores.Add(filePath);
-                }
-                foreach (var fileName in dialog.SafeFileNames)
-                {
-                    filesNames.Add(fileName);
-                }
-            }
+                OpenFileDialog dialog = new();
 
-            tbFilesNames.Text = String.Join(" ", filesNames);
+                dialog.Filter = "Text documents (*.txt)|*.txt";
+                dialog.FilterIndex = 1;
+                dialog.Multiselect = true;
+                dialog.InitialDirectory = "Protocols\\";
+
+                Nullable<bool> result = dialog.ShowDialog();
+
+                if (result == true)
+                {
+                    string pattern = @"AL:\s+\d{1,2}";
+                    foreach (var filePath in dialog.FileNames)
+                    {
+                        using (StreamReader sr = new(filePath, Encoding.UTF8))
+                        {
+                            while (!sr.EndOfStream)
+                            {
+                                string line = sr.ReadLine();
+                                if (Regex.IsMatch(line, pattern))
+                                {
+                                    var al = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                                    filesAndLambda.Add(filePath, int.Parse(al[1]));
+                                    break;
+                                }
+                            }
+                        }
+                        filesDirectores.Add(filePath);
+                    }
+                    foreach (var fileName in dialog.SafeFileNames)
+                    {
+                        filesNames.Add(fileName);
+                    }
+                }
+
+                filesAndLambda = filesAndLambda.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+
+                tbFilesNames.Text = String.Join(" ", filesNames);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"ПРоизошла ошибка: {ex}");
+            }
+            
         }
 
         private void btnInterpolSender_Click(object sender, RoutedEventArgs e)
         {
-            StringBuilder fileHeader = new();
+            
+        }
 
-            using(StreamReader sr = new StreamReader(filesDirectores[0], Encoding.UTF8))
+        private void ConverterPage_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new HomePage());
+        }
+
+        private void btnInterpol_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new InterpolPage());
+        }
+
+        private void btnInterpolSenderExecute_Click(object sender, RoutedEventArgs e)
+        {
+            List<double> allBx = new();
+            string tableHeader = null;
+            int bxIndex = default;
+
+            if (filesAndLambda == null || filesAndLambda.Count < 2 || filesDirectores == null || filesDirectores.Count < 2)
             {
-                double bx = default;
-                bool isTable = false;
-                int bxIndex = default;
-
-                while (!sr.EndOfStream)
+                MessageBox.Show("Фалы не выбраны или выбран только 1 файл");
+                return;
+            }
+            try
+            {
+                using (StreamReader sr = new StreamReader(filesDirectores[0], Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter($@"Protocols/Final_protocol.txt", false, Encoding.UTF8))
                 {
-                    string line = sr.ReadLine();
-                    string[] headers = null;
-                    
-                    if (line.TrimStart().StartsWith("N ") && !isTable)
+                    double bx = default;
+                    bool isTable = false;
+
+
+                    while (!sr.EndOfStream)
                     {
-                        isTable = true;
-                        headers = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        for (int i = 0; i < headers.Length; i++)
+                        string line = sr.ReadLine();
+                        string[] headers = null;
+
+                        if (line.TrimStart().StartsWith("N ") && !isTable)
                         {
-                            if (headers[i].Contains("Bx".Trim()))
-                                bxIndex = i;
+                            isTable = true;
+                            tableHeader = line;
+                            headers = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            for (int i = 0; i < headers.Length; i++)
+                            {
+                                if (headers[i].Contains("Bx".Trim()))
+                                    bxIndex = i;
+                            }
                         }
-                    }
-                    else if(isTable)
-                    {
-                        if (string.IsNullOrWhiteSpace(line))
-                            continue;
-                        else
+                        else if (isTable)
                         {
-                            var tableLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                            bx = Double.Parse(tableLine[bxIndex], CultureInfo.InvariantCulture);
-                            fileHeader.Append($"Bx: {bx}");
+                            if (string.IsNullOrWhiteSpace(line))
+                                continue;
+                            else
+                            {
+                                var tableLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                                if (double.TryParse(tableLine[bxIndex], CultureInfo.InvariantCulture, out double value))
+                                {
+                                    bx = value;
+                                    allBx.Add(bx);
+                                }
+                                else
+                                {
+                                    MessageBox.Show("Ошибка в чтении файла, Bx был неверного формата");
+                                    return;
+                                }
+                            }
                         }
+                        else if (!isTable)
+                            sw.WriteLine(line);
                     }
-                    else if(!isTable)
-                        fileHeader.Append(line); 
                 }
-                MessageBox.Show(fileHeader.ToString());
-            }    
-            using (StreamWriter sw = new StreamWriter($@"Protocols/final_protocol", false, Encoding.UTF8))
+
+                using (StreamWriter sw = new StreamWriter($@"Protocols/Final_protocol.txt", true, Encoding.UTF8))
+                {
+                    for (int i = 0; i < allBx.Count; i++)
+                    {
+                        sw.WriteLine($"Bx: {allBx[i]}\n{tableHeader}\n");
+
+                        foreach (var item in filesAndLambda)
+                        {
+                            using (StreamReader sr = new StreamReader(item.Key, Encoding.UTF8))
+                            {
+                                bool IsTable = false;
+                                while (!sr.EndOfStream)
+                                {
+                                    string line = sr.ReadLine();
+                                    if (line.TrimStart().StartsWith("N "))
+                                        IsTable = true;
+                                    else if (IsTable)
+                                    {
+                                        if (string.IsNullOrWhiteSpace(line))
+                                            continue;
+                                        var tableLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                                        if (Double.TryParse(tableLine[bxIndex], CultureInfo.InvariantCulture, out double parsedValue) && allBx[i] == parsedValue)
+                                        {
+                                            sw.WriteLine(line);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        sw.WriteLine();
+                    }
+                }
+            }
+            catch (Exception ex)
             {
 
+                MessageBox.Show($"Произошла ошибка{ex}");
             }
         }
     }

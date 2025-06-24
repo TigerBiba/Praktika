@@ -32,28 +32,29 @@ namespace Praktika.Pages
 
         private void btnRender_Click(object sender, RoutedEventArgs e)
         {
-            StringBuilder errors = new StringBuilder("Есть ошибки мешающие продолжить работу: ");
-            int countNumber = 0;
+            // Проверка входных данных
+            StringBuilder errors = new StringBuilder("Есть ошибки, мешающие продолжить работу: ");
+            int errorCount = 0;
 
-            string numFormat = @"\d{5}";
+            string numFormat = @"\d{5}"; // Регулярное выражение для проверки 5 цифр
 
             if (string.IsNullOrEmpty(fileDirectory))
             {
-                errors.AppendLine("Файл не открыт, сначала ткройте исходный файл");
-                countNumber++;
+                errors.AppendLine("Файл не открыт, сначала откройте исходный файл");
+                errorCount++;
             }
             if (tbModelName.Text == null || !Regex.IsMatch(tbModelName.Text, numFormat))
             {
-                errors.AppendLine("Номер модели отсутствует или находится в неправильном формате(5 чисел)");
-                countNumber++;
+                errors.AppendLine("Номер модели отсутствует или находится в неправильном формате (5 цифр)");
+                errorCount++;
             }
             if (tbProtocolNumber.Text == null || !Regex.IsMatch(tbProtocolNumber.Text, numFormat))
             {
-                errors.AppendLine("Номер протокола отсутствует или находится в неправильном формате(5 чисел)");
-                countNumber++;
-            }    
-            
-            if(countNumber > 0)
+                errors.AppendLine("Номер протокола отсутствует или находится в неправильном формате (5 цифр)");
+                errorCount++;
+            }
+
+            if (errorCount > 0)
             {
                 MessageBox.Show(errors.ToString());
                 errors.Clear();
@@ -62,97 +63,160 @@ namespace Praktika.Pages
 
             try
             {
-                var columnsToKeep = new List<string> { "N", "AList", "BEist", "Q", "FLOW_RATE", "Cx", "Cy", "Cz", "Mx", "My", "Mz", "Cxa", "Cya", "Cza", "Mxa", "Mya", "Mza", "Bx", "TVINT1", "VINT1" };
-                var columnIndicesToKeep = new List<int>();
-                var columnWidths = new Dictionary<int, int>();
-                var tableLines = new List<string>();
+                // Список столбцов, которые нужно оставить
+                string[] columnsToKeep = new string[] { "N", "AList", "BEist", "Q", "FLOW_RATE", "Cx", "Cy", "Cz", "Mx", "My", "Mz", "Cxa", "Cya", "Cza", "Mxa", "Mya", "Mza", "Bx", "TVINT1", "VINT1" };
+                int[] columnIndicesToKeep = new int[columnsToKeep.Length]; // Индексы столбцов для сохранения
+                int columnIndicesCount = 0; // Счетчик для добавления индексов
+                Dictionary<int, int> columnWidths = new Dictionary<int, int>(); // Ширина столбцов
+                string[] tableLines = new string[1000]; // Массив для строк таблицы (предполагаем максимум 1000 строк)
+                int tableLinesCount = 0; // Счетчик строк таблицы
                 bool isTableSection = false;
 
-                // Чтение и анализ файла
-                foreach (var line in File.ReadLines(fileDirectory, Encoding.UTF8))
+                // Чтение файла для анализа заголовков и строк таблицы
+                using (StreamReader sr = new StreamReader(fileDirectory, Encoding.UTF8))
                 {
-                    if (!isTableSection)
+                    while (!sr.EndOfStream)
                     {
-                        if (line.TrimStart().StartsWith("N "))
+                        string line = sr.ReadLine();
+
+                        if (!isTableSection)
                         {
-                            isTableSection = true;
-                            var headers = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                            for (int i = 0; i < headers.Length; i++)
+                            // Проверяем начало таблицы (строка начинается с "N ")
+                            if (line.TrimStart().StartsWith("N "))
                             {
-                                if (columnsToKeep.Contains(headers[i]))
+                                isTableSection = true;
+                                string[] headers = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                                // Находим индексы столбцов, которые нужно оставить
+                                for (int i = 0; i < headers.Length; i++)
                                 {
-                                    columnIndicesToKeep.Add(i);
-                                    columnWidths[i] = headers[i].Length;
+                                    for (int j = 0; j < columnsToKeep.Length; j++)
+                                    {
+                                        if (headers[i] == columnsToKeep[j])
+                                        {
+                                            columnIndicesToKeep[columnIndicesCount] = i;
+                                            columnWidths[i] = headers[i].Length;
+                                            columnIndicesCount++;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else if (!string.IsNullOrWhiteSpace(line))
+                        {
+                            // Сохраняем строки таблицы
+                            tableLines[tableLinesCount] = line;
+                            tableLinesCount++;
+
+                            // Обновляем ширину столбцов
+                            string[] columns = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            for (int i = 0; i < columnIndicesCount; i++)
+                            {
+                                int columnIndex = columnIndicesToKeep[i];
+                                if (columnIndex < columns.Length)
+                                {
+                                    if (columnWidths.ContainsKey(columnIndex))
+                                    {
+                                        columnWidths[columnIndex] = Math.Max(columnWidths[columnIndex], columns[columnIndex].Length);
+                                    }
                                 }
                             }
                         }
                     }
-                    else if (!string.IsNullOrWhiteSpace(line))
+                }
+
+                // Запись результата в новый файл
+                using (StreamReader sr = new StreamReader(fileDirectory, Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter($"Protocols/{filename}", false, Encoding.UTF8))
+                {
+                    string pattern = @"(Protocol_Number\s+=\s+)|(ModelName\s+=\s+)|(ExpName\s+=\s+)|(PROTOCOL_DATE\s+=\s+)|(AL:\s+\d{1,2})|(PROCESSING_DATE\s+=\s+)";
+                    isTableSection = false;
+                    int tableLineIndex = 0;
+
+                    while (!sr.EndOfStream)
                     {
-                        tableLines.Add(line);
-                        var columns = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        foreach (int i in columnIndicesToKeep)
+                        string line = sr.ReadLine();
+
+                        if (!isTableSection)
                         {
-                            if (i < columns.Length)
+                            // Обработка строк до таблицы
+                            Match match = Regex.Match(line, pattern);
+                            if (match.Success)
                             {
-                                columnWidths[i] = Math.Max(columnWidths[i], columns[i].Length);
+                                if (match.Groups[1].Success)
+                                    sw.WriteLine($"Protocol_Number = {tbProtocolNumber.Text}");
+                                else if (match.Groups[2].Success)
+                                    sw.WriteLine($"ModelName = {tbModelName.Text}");
+                                else if (match.Groups[3].Success)
+                                    sw.WriteLine("ExpName = Практика");
+                                else if (match.Groups[6].Success)
+                                    sw.WriteLine($"PROCESSING_DATE = {DateTime.Now}");
+                                else
+                                    sw.WriteLine(line);
+                            }
+                            else if (line.TrimStart().StartsWith("N "))
+                            {
+                                isTableSection = true;
+                                string[] headers = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                                string[] filteredHeaders = new string[columnIndicesCount];
+
+                                // Формируем отформатированные заголовки
+                                for (int i = 0; i < columnIndicesCount; i++)
+                                {
+                                    int columnIndex = columnIndicesToKeep[i];
+                                    if (i == 0)
+                                        filteredHeaders[i] = headers[columnIndex]; // Первый столбец без отступов
+                                    else
+                                        filteredHeaders[i] = headers[columnIndex].PadLeft(columnWidths[columnIndex]);
+                                }
+
+                                sw.WriteLine(string.Join("    ", filteredHeaders));
                             }
                         }
-                    }
-                }
-
-                // Запись отфильтрованного результата
-                using var sr = new StreamReader(fileDirectory, Encoding.UTF8);
-                using var sw = new StreamWriter($"Protocols/{filename}", false);
-                string pattern = @"(Protocol_Number\s+=\s+)|(ModelName\s+=\s+)|(ExpName\s+=\s+)|(PROTOCOL_DATE\s+=\s+)|(AL:\s+\d{1,2})|(PROCESSING_DATE\s+=\s+)";
-                isTableSection = false;
-                int tableLineIndex = 0;
-
-                while (!sr.EndOfStream)
-                {
-                    string line = sr.ReadLine();
-
-                    if (!isTableSection)
-                    {
-                        Match m = Regex.Match(line, pattern);
-                        if (m.Success)
+                        else
                         {
-                            sw.WriteLine(m.Groups[1].Success ? $"Protocol_Number = {tbProtocolNumber.Text}" :
-                                           m.Groups[2].Success ? $"ModelName = {tbModelName.Text}" :
-                                           m.Groups[3].Success ? "ExpName = Практика" :
-                                           m.Groups[6].Success ? $"PROCESSING_DATE = {DateTime.Now}" : line);
-                        }
-                        else if (line.TrimStart().StartsWith("N "))
-                        {
-                            isTableSection = true;
-                            var headers = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                            var filteredHeaders = columnIndicesToKeep
-                                .Select((i, idx) => idx == 0 ? headers[i] : headers[i].PadLeft(columnWidths[i]))
-                                .ToList();
-                            sw.WriteLine(string.Join("    ", filteredHeaders));
-                        }
-                    }
-                    else
-                    {
-                        if (string.IsNullOrWhiteSpace(line))
-                        {
-                            sw.WriteLine();
-                            continue;
-                        }
+                            // Пропускаем пустые строки
+                            if (string.IsNullOrWhiteSpace(line))
+                            {
+                                sw.WriteLine();
+                                continue;
+                            }
 
-                        if (tableLineIndex == 0 || tableLineIndex == tableLines.Count - 1)
-                        {
+                            // Пропускаем первую и последнюю строки таблицы
+                            if (tableLineIndex == 0 || tableLineIndex == tableLinesCount - 1)
+                            {
+                                tableLineIndex++;
+                                continue;
+                            }
+
+                            // Обработка строк таблицы
+                            string[] columns = tableLines[tableLineIndex].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            string[] filteredColumns = new string[columnIndicesCount];
                             tableLineIndex++;
-                            continue;
-                        }
 
-                        var columns = tableLines[tableLineIndex++].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        var filteredColumns = columnIndicesToKeep
-                            .Select((i, idx) => idx == 0 ? (i < columns.Length ? columns[i] : "") : (i < columns.Length ? columns[i].PadLeft(columnWidths[i]) : "".PadLeft(columnWidths[i])))
-                            .ToList();
-                        sw.WriteLine(string.Join("    ", filteredColumns));
+                            for (int i = 0; i < columnIndicesCount; i++)
+                            {
+                                int columnIndex = columnIndicesToKeep[i];
+                                if (columnIndex < columns.Length)
+                                {
+                                    if (i == 0)
+                                        filteredColumns[i] = columns[columnIndex]; // Первый столбец без отступов
+                                    else
+                                        filteredColumns[i] = columns[columnIndex].PadLeft(columnWidths[columnIndex]);
+                                }
+                                else
+                                {
+                                    // Если столбец отсутствует, заполняем пустыми символами
+                                    filteredColumns[i] = "".PadLeft(columnWidths[columnIndex]);
+                                }
+                            }
+
+                            sw.WriteLine(string.Join("    ", filteredColumns));
+                        }
                     }
                 }
+
                 MessageBox.Show("Успешное преобразование файла");
             }
             catch (Exception ex)

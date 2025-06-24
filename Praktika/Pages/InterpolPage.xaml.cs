@@ -44,6 +44,29 @@ namespace Praktika.Pages
 
         private void btnInterpol_Click(object sender, RoutedEventArgs e)
         {
+            
+        }
+
+        private void btnFileOpen_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo { FileName = "explorer", Arguments = $"/n,select,{fileDirectory}" });
+        }
+
+        private void btnReadFile_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string fullText = File.ReadAllText(fileDirectory, Encoding.UTF8);
+                tblTextFile.Text = fullText;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при чтении файла: {ex.Message}");
+            }
+        }
+
+        private void btnInterpolExecute_Click(object sender, RoutedEventArgs e)
+        {
             StringBuilder errors = new StringBuilder("Есть ошибки мешающие продолжить работу: ");
             int countNumber = 0;
 
@@ -52,7 +75,7 @@ namespace Praktika.Pages
                 errors.AppendLine("Файл не открыт, сначала ткройте файл");
                 countNumber++;
             }
-            if (!Double.TryParse(tbFirstX2.Text, out double firstX2) | !Double.TryParse(tbSecondX2.Text, out double secondX2) | !Double.TryParse(tbThirdX2.Text, out double thirdX2) | !Double.TryParse(tbFourthX2.Text, out double fourthX2) | !Double.TryParse(tbFifthX2.Text, out double fifthX2) | !Double.TryParse(tbSixthX2.Text, out double sixthX2))
+            if (!Double.TryParse(tbFirstX2.Text, CultureInfo.InvariantCulture, out double firstX2) | !Double.TryParse(tbSecondX2.Text, CultureInfo.InvariantCulture, out double secondX2) | !Double.TryParse(tbThirdX2.Text, CultureInfo.InvariantCulture, out double thirdX2) | !Double.TryParse(tbFourthX2.Text, CultureInfo.InvariantCulture, out double fourthX2) | !Double.TryParse(tbFifthX2.Text, CultureInfo.InvariantCulture, out double fifthX2) | !Double.TryParse(tbSixthX2.Text, CultureInfo.InvariantCulture, out double sixthX2))
             {
                 errors.AppendLine("Номер модели отсутствует или находится в неправильном формате(5 чисел)");
                 countNumber++;
@@ -101,7 +124,10 @@ namespace Praktika.Pages
                         foreach (var item in columnsIndex)
                         {
                             if (i == item.Value)
-                                inputCoulmnsData[item.Key].Add(Double.Parse(columnsData[i], CultureInfo.InvariantCulture)); // культура т.к. написано в инглиш формате
+                            {
+                                if (Double.TryParse(columnsData[i], CultureInfo.InvariantCulture, out double value)) // написано в инглиш формате
+                                    inputCoulmnsData[item.Key].Add(value);
+                            }
                         }
                     }
                 }
@@ -111,6 +137,11 @@ namespace Praktika.Pages
                 }
             }
 
+            if (inputCoulmnsData["Bx"].Count > 6)
+            {
+                MessageBox.Show("Ошибка в чтении, возможно выбран неотфильтрованный файл");
+                return;
+            }
             Dictionary<double, (double x1, double x3, int indexLeft, int indexRight)> xValues = new Dictionary<double, (double x1, double x3, int indexLeft, int indexRight)>(); // словарь x2 ключ - вводимый x2, значение 1 - граничное слева, значение 2 - граничное справа
 
             for (int i = 0; i < inputCoulmnsData["Bx"].Count; i++) // заполнение x2 граничными значениями и их индексами
@@ -124,24 +155,24 @@ namespace Praktika.Pages
 
                 if (i + 1 > inputCoulmnsData["Bx"].Count - 1 & x2Numbers[i] > inputCoulmnsData["Bx"][i])
                 {
-                    xValues[x2Numbers[i]] = (inputCoulmnsData["Bx"][i - 1], inputCoulmnsData["Bx"][i], i - 1 , i);
+                    xValues[x2Numbers[i]] = (inputCoulmnsData["Bx"][i - 1], inputCoulmnsData["Bx"][i], i - 1, i);
                     continue;
                 }
 
                 if (i + 1 < inputCoulmnsData["Bx"].Count - 1 && x2Numbers[i] > inputCoulmnsData["Bx"][i] && x2Numbers[i] < inputCoulmnsData["Bx"][i + 1])
                 {
-                    xValues[x2Numbers[i]] = (inputCoulmnsData["Bx"][i], inputCoulmnsData["Bx"][i + 1], i , i + 1);
+                    xValues[x2Numbers[i]] = (inputCoulmnsData["Bx"][i], inputCoulmnsData["Bx"][i + 1], i, i + 1);
                     continue;
                 }
 
                 if (i > 0 && x2Numbers[i] > inputCoulmnsData["Bx"][i - 1] && x2Numbers[i] < inputCoulmnsData["Bx"][i])
                 {
-                    xValues[x2Numbers[i]] = (inputCoulmnsData["Bx"][i - 1], inputCoulmnsData["Bx"][i], i - 1 , i );
+                    xValues[x2Numbers[i]] = (inputCoulmnsData["Bx"][i - 1], inputCoulmnsData["Bx"][i], i - 1, i);
                     continue;
                 }
 
-                if (i > 0 && x2Numbers[i] > inputCoulmnsData["Bx"][i] && x2Numbers[i] < inputCoulmnsData["Bx"][i+1])
-                    xValues[x2Numbers[i]] = (inputCoulmnsData["Bx"][i], inputCoulmnsData["Bx"][i+1], i , i + 1 );
+                if (i > 0 && x2Numbers[i] > inputCoulmnsData["Bx"][i] && x2Numbers[i] < inputCoulmnsData["Bx"][i + 1])
+                    xValues[x2Numbers[i]] = (inputCoulmnsData["Bx"][i], inputCoulmnsData["Bx"][i + 1], i, i + 1);
             }
 
             Dictionary<string, List<double>> outputColumnData = new Dictionary<string, List<double>>(); // изменённые значения
@@ -174,7 +205,7 @@ namespace Praktika.Pages
             {
                 bool isTable = false;
                 int resultIndex = 0; // Индекс для прохода по interpolatedResults
-                string[] headers = null; // Для хранения заголовков
+                string[] headers = null;
                 int[] columnWidths = null; // Для хранения ширины столбцов
                 List<string[]> tableRows = new List<string[]>(); // Для хранения строк таблицы
                 List<string> nonTableLines = new List<string>(); // Для хранения нетабличных строк
@@ -194,24 +225,14 @@ namespace Praktika.Pages
                             columnWidths = headers.Select(h => h.Length).ToArray();
                         }
                         else
-                        {
-                            nonTableLines.Add(line); // Сохраняем нетабличные строки
-                        }
+                            sw.WriteLine(line); // нетабличные строки
                     }
                     else
                     {
-                        // Пропускаем пустые строки внутри таблицы
                         if (string.IsNullOrWhiteSpace(line))
-                        {
                             continue;
-                        }
 
-                        // Разбиваем строку на значения
                         var data = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (data.Length != headers.Length)
-                        {
-                            continue;
-                        }
 
                         // Сохраняем строку для последующей обработки
                         tableRows.Add(data);
@@ -257,12 +278,6 @@ namespace Praktika.Pages
                     }
 
                     resultIndex++;
-                }
-
-                // Записываем нетабличные строки
-                foreach (var line in nonTableLines)
-                {
-                    sw.WriteLine(line);
                 }
 
                 // Записываем заголовок таблицы
@@ -319,25 +334,17 @@ namespace Praktika.Pages
 
             fileDirectory = $@"Protocols/{"Interpolate_protocol_" + fileName}";
 
-            MessageBox.Show("Интерполяция выполнена успешно");            
+            MessageBox.Show("Интерполяция выполнена успешно");
         }
 
-        private void btnFileOpen_Click(object sender, RoutedEventArgs e)
+        private void ConverterPage_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start(new ProcessStartInfo { FileName = "explorer", Arguments = $"/n,select,{fileDirectory}" });
+            NavigationService.Navigate(new HomePage());
         }
 
-        private void btnReadFile_Click(object sender, RoutedEventArgs e)
+        private void btnInterpolSender_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                string fullText = File.ReadAllText(fileDirectory, Encoding.UTF8);
-                tblTextFile.Text = fullText;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при чтении файла: {ex.Message}");
-            }
+            NavigationService.Navigate(new InterpolSenderPage());
         }
     }
 }

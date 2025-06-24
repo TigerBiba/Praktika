@@ -7,10 +7,19 @@
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Resources\Converter_icon.png" />
+    <None Remove="Resources\Interpolation_icon.png" />
+    <None Remove="Resources\logo.png" />
+    <None Remove="Resources\protocol_icon.png" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Protocols\" />
+    <Resource Include="Resources\Converter_icon.png" />
+    <Resource Include="Resources\Interpolation_icon.png" />
+    <Resource Include="Resources\logo.png" />
+    <Resource Include="Resources\protocol_icon.png" />
   </ItemGroup>
 </Project>
