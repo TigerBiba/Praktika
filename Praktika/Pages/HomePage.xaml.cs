@@ -34,16 +34,14 @@ namespace Praktika.Pages
 
             try
             {
-                // Список столбцов, которые нужно оставить
-                string[] columnsToKeep = new string[] { "N", "AList", "BEist", "Q", "FLOW_RATE", "Cx", "Cy", "Cz", "Mx", "My", "Mz", "Cxa", "Cya", "Cza", "Mxa", "Mya", "Mza", "Bx", "TVINT1", "VINT1" };
+                string[] columnsToKeep = { "N", "AList", "BEist", "Q", "FLOW_RATE", "Cx", "Cy", "Cz", "Mx", "My", "Mz", "Cxa", "Cya", "Cza", "Mxa", "Mya", "Mza", "Bx", "TVINT1", "VINT1" };
                 int[] columnIndicesToKeep = new int[columnsToKeep.Length]; // Индексы столбцов для сохранения
-                int columnIndicesCount = 0; // Счетчик для добавления индексов
-                Dictionary<int, int> columnWidths = new Dictionary<int, int>();
-                string[] tableLines = new string[1000]; // Массив для строк таблицы (предполагаем максимум 1000 строк)
-                int tableLinesCount = 0; // Счетчик строк таблицы
+                int columnIndicesCount = 0; //счётчик нацденных индексов
+                Dictionary<int, int> columnWidths = new Dictionary<int, int>(); //ключ - индекс столбца, значение его макс ширина
+                string[] tableLines = new string[1000];
+                int tableLinesCount = 0;
                 bool isTableSection = false;
 
-                // Чтение файла для анализа заголовков и строк таблицы
                 using (StreamReader sr = new StreamReader(fileDirectory, Encoding.UTF8))
                 {
                     while (!sr.EndOfStream)
@@ -52,13 +50,11 @@ namespace Praktika.Pages
 
                         if (!isTableSection)
                         {
-                            // Проверяем начало таблицы (строка начинается с "N ")
                             if (line.TrimStart().StartsWith("N "))
                             {
                                 isTableSection = true;
                                 string[] headers = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-                                // Находим индексы столбцов, которые нужно оставить
                                 for (int i = 0; i < headers.Length; i++)
                                 {
                                     for (int j = 0; j < columnsToKeep.Length; j++)
@@ -76,11 +72,9 @@ namespace Praktika.Pages
                         }
                         else if (!string.IsNullOrWhiteSpace(line))
                         {
-                            // Сохраняем строки таблицы
                             tableLines[tableLinesCount] = line;
                             tableLinesCount++;
 
-                            // Обновляем ширину столбцов
                             string[] columns = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                             for (int i = 0; i < columnIndicesCount; i++)
                             {
@@ -97,7 +91,6 @@ namespace Praktika.Pages
                     }
                 }
 
-                // Запись результата в новый файл
                 using (StreamReader sr = new StreamReader(fileDirectory, Encoding.UTF8))
                 using (StreamWriter sw = new StreamWriter($"Protocols\\{filename}", false, Encoding.UTF8))
                 {
@@ -111,7 +104,6 @@ namespace Praktika.Pages
 
                         if (!isTableSection)
                         {
-                            // Обработка строк до таблицы
                             Match match = Regex.Match(line, pattern);
                             if (match.Success)
                             {
@@ -132,12 +124,12 @@ namespace Praktika.Pages
                                 string[] headers = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                                 string[] filteredHeaders = new string[columnIndicesCount];
 
-                                // Формируем отформатированные заголовки
+                                //Заголовки
                                 for (int i = 0; i < columnIndicesCount; i++)
                                 {
                                     int columnIndex = columnIndicesToKeep[i];
                                     if (i == 0)
-                                        filteredHeaders[i] = headers[columnIndex]; // Первый столбец без отступов
+                                        filteredHeaders[i] = headers[columnIndex];
                                     else
                                         filteredHeaders[i] = headers[columnIndex].PadLeft(columnWidths[columnIndex]);
                                 }
@@ -147,21 +139,18 @@ namespace Praktika.Pages
                         }
                         else
                         {
-                            // Пропускаем пустые строки
                             if (string.IsNullOrWhiteSpace(line))
                             {
                                 sw.WriteLine();
                                 continue;
                             }
 
-                            // Пропускаем первую и последнюю строки таблицы
-                            if (tableLineIndex == 0 || tableLineIndex == tableLinesCount - 1)
+                            if (tableLineIndex == 0 || tableLineIndex == tableLinesCount - 1) //не записываем нули
                             {
                                 tableLineIndex++;
                                 continue;
                             }
 
-                            // Обработка строк таблицы
                             string[] columns = tableLines[tableLineIndex].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                             string[] filteredColumns = new string[columnIndicesCount];
                             tableLineIndex++;
@@ -172,14 +161,9 @@ namespace Praktika.Pages
                                 if (columnIndex < columns.Length)
                                 {
                                     if (i == 0)
-                                        filteredColumns[i] = columns[columnIndex]; // Первый столбец без отступов
+                                        filteredColumns[i] = columns[columnIndex];
                                     else
                                         filteredColumns[i] = columns[columnIndex].PadLeft(columnWidths[columnIndex]);
-                                }
-                                else
-                                {
-                                    // Если столбец отсутствует, заполняем пустыми символами
-                                    filteredColumns[i] = "".PadLeft(columnWidths[columnIndex]);
                                 }
                             }
 
@@ -200,7 +184,7 @@ namespace Praktika.Pages
             StringBuilder errors = new StringBuilder("Есть ошибки, мешающие продолжить работу: ");
             int errorCount = 0;
 
-            string numFormat = @"\d{5}"; // Регулярное выражение для проверки 5 цифр
+            string numFormat = @"\d{5}";
 
             if (string.IsNullOrEmpty(fileDirectory))
             {
@@ -229,7 +213,7 @@ namespace Praktika.Pages
 
         private void btnOpenFile_Click(object sender, RoutedEventArgs e)
         {
-            Microsoft.Win32.OpenFileDialog dialog = new Microsoft.Win32.OpenFileDialog();
+            Microsoft.Win32.OpenFileDialog dialog = new();
             dialog.Filter = "Text documents (*.txt)|*.txt";
             dialog.FilterIndex = 1;
 

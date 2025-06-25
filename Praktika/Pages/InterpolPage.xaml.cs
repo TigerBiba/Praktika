@@ -31,30 +31,6 @@ namespace Praktika.Pages
             
         }
 
-        private void btnFileOpen_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                // Проверяем, существует ли файл
-                if (File.Exists(fileDirectory))
-                {
-                    // Создаем новый процесс для запуска проводника
-                    Process process = new Process();
-                    process.StartInfo.FileName = "explorer";
-                    process.StartInfo.Arguments = "\"" + fileDirectory + "\""; // Путь к файлу в кавычках
-                    process.Start();
-                }
-                else
-                {
-                    Console.WriteLine($"Файл не найден: {fileDirectory}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Ошибка при открытии файла: {ex.Message}");
-            }
-        }
-
         private void btnInterpolExecute_Click(object sender, RoutedEventArgs e)
         {
             FilesHelper.CreateFolderPath();
@@ -64,23 +40,23 @@ namespace Praktika.Pages
             if(x2Numbers.Length == 0)
                 return;
 
-            Dictionary<string, int> columnsIndex = new Dictionary<string, int>(); // нужные индексы столбцов
-            Dictionary<string, List<double>> inputCoulmnsData = new Dictionary<string, List<double>>(); // изначальные значения
+            Dictionary<string, int> columnsIndex = new Dictionary<string, int>();
+            Dictionary<string, List<double>> inputCoulmnsData = new Dictionary<string, List<double>>();
 
             bool IsTable = false;
             bool enterWhitespace = false;
 
             foreach (string line in File.ReadLines(fileDirectory, Encoding.UTF8))
             {
-                if (line.TrimStart().StartsWith("N ") && !IsTable) // чисто для заголовков
+                if (line.TrimStart().StartsWith("N ") && !IsTable)
                 {
                     IsTable = true;
 
-                    var headers = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries); // удаляет ненужные пробелы и получается список из заголовков
+                    var headers = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                     for (int i = 0; i < headers.Length; i++)
                     {
-                        if (columnNames.Contains(headers[i].Trim())) // Contains ищет совпадения в строке, если они есть то добавляет в словарь
+                        if (columnNames.Contains(headers[i].Trim()))
                         {
                             columnsIndex[headers[i]] = i;
                             inputCoulmnsData[headers[i]] = new List<double>();
@@ -90,7 +66,7 @@ namespace Praktika.Pages
                 }
                 else if (IsTable && enterWhitespace)
                 {
-                    var columnsData = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries); // для строк таблицы
+                    var columnsData = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                     for (int i = 0; i < columnsData.Length; i++)
                     {
@@ -98,7 +74,7 @@ namespace Praktika.Pages
                         {
                             if (i == item.Value)
                             {
-                                if (Double.TryParse(columnsData[i], CultureInfo.InvariantCulture, out double value)) // написано в инглиш формате
+                                if (Double.TryParse(columnsData[i], CultureInfo.InvariantCulture, out double value))
                                     inputCoulmnsData[item.Key].Add(value);
                             }
                         }
@@ -120,7 +96,7 @@ namespace Praktika.Pages
             if (xValues == null)
                 return;
 
-            var outputColumnData = GetOutputColumnData(columnNames, x2Numbers, xValues, inputCoulmnsData); // изменённые значения
+            var outputColumnData = GetOutputColumnData(columnNames, x2Numbers, xValues, inputCoulmnsData);
             if (outputColumnData == null)
                 return;
 
@@ -132,18 +108,16 @@ namespace Praktika.Pages
                     bool isTable = false;
                     int resultIndex = 0; // Индекс для прохода по interpolatedResults
                     string[] headers = null;
-                    int[] columnWidths = null; // Для хранения ширины столбцов
-                    List<string[]> tableRows = new List<string[]>(); // Для хранения строк таблицы
-                    List<string> nonTableLines = new List<string>(); // Для хранения нетабличных строк
+                    int[] columnWidths = null;
+                    List<string[]> tableRows = new();
+                    List<string> nonTableLines = new();
 
-                    // Читаем файл и собираем данные
                     while (!sr.EndOfStream)
                     {
                         string line = sr.ReadLine();
 
                         if (!isTable)
                         {
-                            // Сохраняем строки до таблицы
                             if (line.TrimStart().StartsWith("N "))
                             {
                                 isTable = true;
@@ -151,7 +125,7 @@ namespace Praktika.Pages
                                 columnWidths = headers.Select(h => h.Length).ToArray();
                             }
                             else
-                                sw.WriteLine(line); // нетабличные строки
+                                sw.WriteLine(line);
                         }
                         else
                         {
@@ -160,7 +134,6 @@ namespace Praktika.Pages
 
                             var data = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-                            // Сохраняем строку для последующей обработки
                             tableRows.Add(data);
                         }
                     }
@@ -171,24 +144,21 @@ namespace Praktika.Pages
                         string[] newRow = new string[data.Length];
                         for (int i = 0; i < data.Length; i++)
                         {
-                            if (i == 0) // Столбец N сохраняем без изменений
+                            if (i == 0)
                             {
                                 newRow[i] = data[i];
                                 columnWidths[i] = Math.Max(columnWidths[i], newRow[i].Length);
                                 continue;
                             }
 
-                            // Проверяем, есть ли столбец в columnsIndex
                             var column = columnsIndex.FirstOrDefault(x => x.Value == i).Key;
                             if (column != null && outputColumnData.ContainsKey(column) && resultIndex < x2Numbers.Length)
                             {
-                                // Интерполированные значения
                                 double value = outputColumnData[column][resultIndex];
                                 newRow[i] = value.ToString("F7", CultureInfo.InvariantCulture);
                             }
                             else
                             {
-                                // Форматируем числа с 7 знаками после точки
                                 if (double.TryParse(data[i], NumberStyles.Any, CultureInfo.InvariantCulture, out double value))
                                 {
                                     newRow[i] = value.ToString("F7", CultureInfo.InvariantCulture);
@@ -199,58 +169,46 @@ namespace Praktika.Pages
                                 }
                             }
 
-                            // Обновляем ширину столбца
                             columnWidths[i] = Math.Max(columnWidths[i], newRow[i].Length);
                         }
 
                         resultIndex++;
                     }
 
-                    // Записываем заголовок таблицы
-                    string formattedHeader = string.Join("    ", headers.Select((h, i) => h.PadLeft(columnWidths[i])));
-                    sw.WriteLine(formattedHeader);
+                    sw.WriteLine(string.Join("    ", headers.Select((h, i) => h.PadLeft(columnWidths[i]))));
 
-                    // Записываем одну пустую строку после заголовка
                     sw.WriteLine();
 
-                    // Сбрасываем resultIndex для записи таблицы
                     resultIndex = 0;
 
-                    // Записываем таблицу
                     foreach (var data in tableRows)
                     {
                         string[] newRow = new string[data.Length];
                         for (int i = 0; i < data.Length; i++)
                         {
-                            if (i == 0) // Столбец N сохраняем без изменений
+                            if (i == 0)
                             {
                                 newRow[i] = data[i].PadLeft(columnWidths[i]);
                                 continue;
                             }
 
-                            // Форматируем значения
                             var column = columnsIndex.FirstOrDefault(x => x.Value == i).Key;
                             if (column != null && outputColumnData.ContainsKey(column) && resultIndex < x2Numbers.Length)
                             {
-                                // Интерполированные значения
                                 double value = outputColumnData[column][resultIndex];
                                 newRow[i] = value.ToString("F7", CultureInfo.InvariantCulture).PadLeft(columnWidths[i]);
                             }
                             else
                             {
-                                // Форматируем исходные числа
                                 if (double.TryParse(data[i], NumberStyles.Any, CultureInfo.InvariantCulture, out double value))
                                 {
                                     newRow[i] = value.ToString("F7", CultureInfo.InvariantCulture).PadLeft(columnWidths[i]);
                                 }
                                 else
-                                {
                                     newRow[i] = data[i].PadLeft(columnWidths[i]);
-                                }
                             }
                         }
 
-                        // Формируем отформатированную строку
                         string formattedRow = string.Join("    ", newRow);
                         sw.WriteLine(formattedRow);
 
@@ -269,6 +227,27 @@ namespace Praktika.Pages
             
         }
 
+        private void btnFileOpen_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (File.Exists(fileDirectory))
+                {
+                    Process process = new Process();
+                    process.StartInfo.FileName = "explorer";
+                    process.StartInfo.Arguments = "\"" + fileDirectory + "\"";
+                    process.Start();
+                }
+                else
+                {
+                    Console.WriteLine($"Файл не найден: {fileDirectory}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при открытии файла: {ex.Message}");
+            }
+        }
         public double[] TryX2Number()
         {
             StringBuilder errors = new StringBuilder("Есть ошибки мешающие продолжить работу: ");
