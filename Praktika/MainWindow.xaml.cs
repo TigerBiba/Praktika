@@ -26,18 +26,5 @@ namespace Praktika
             InitializeComponent();
             FrmMain.Navigate(new HomePage());
         }
-
-        private void FrmMain_ContentRendered(object sender, EventArgs e)
-        {
-            if (FrmMain.CanGoBack)
-                btnBack.Visibility = Visibility.Visible;
-            else
-                btnBack.Visibility = Visibility.Hidden;
-        }
-
-        private void btnBack_Click(object sender, RoutedEventArgs e)
-        {
-            FrmMain.GoBack();
-        }
     }
 }

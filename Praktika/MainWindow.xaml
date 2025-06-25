@@ -5,9 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Praktika"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Обработка интерполяции" Height="450" Width="800" Icon="/Resources/logo.png">
     <Grid>
-        <Button x:Name="btnBack" Content="Назад" Click="btnBack_Click"  Margin="690,0,0,397" RenderTransformOrigin="-1.892,0.608" HorizontalAlignment="Left" Width="110"/>
-        <Frame x:Name="FrmMain" Grid.Row="1" NavigationUIVisibility="Hidden" ContentRendered="FrmMain_ContentRendered"/>
+        <Frame x:Name="FrmMain" Grid.Row="1" NavigationUIVisibility="Hidden"/>
     </Grid>
 </Window>

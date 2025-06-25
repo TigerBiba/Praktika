@@ -14,7 +14,7 @@
         <TextBlock x:Name="tbFilesNames" HorizontalAlignment="Center" Margin="0,101,0,0" TextWrapping="Wrap" Text="Выбранные файлы: " VerticalAlignment="Top" Height="92" Width="178"/>
         <Button x:Name="btnInterpolSenderExecute" Content="Сделать выборку" HorizontalAlignment="Center" Margin="0,198,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.297,-0.548" Height="27" Width="96" Click="btnInterpolSenderExecute_Click"/>
 
-        <Grid HorizontalAlignment="Left" Width="210">
+        <Grid HorizontalAlignment="Left" Width="210" Background="#FF41A8AF">
 
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="60"></ColumnDefinition>
@@ -32,15 +32,15 @@
             <TextBlock Grid.Column="1" Grid.Row="0" FontSize="18" VerticalAlignment="Bottom" HorizontalAlignment="Left" TextWrapping="Wrap" Text="СибНИА им С. А. Чаплыгина"/>
 
             <Image Source="/Resources/Converter_icon.png" Grid.Column="0" Grid.Row="1" />
-            <Button x:Name="ConverterPage" Grid.Column="1" Grid.Row="1" FontSize="18" Click="ConverterPage_Click">
+            <Button x:Name="ConverterPage" Grid.Column="1" Grid.Row="1" FontSize="18" Click="ConverterPage_Click" Background="#FF41A8AF" BorderBrush="#FF41A8AF">
                 <TextBlock TextWrapping="Wrap"  Text="Преобразование протокола" FontSize="14"/>
             </Button>
 
             <Image Source="/Resources/interpolation_icon.png"  Grid.Column="0" Grid.Row="2" Margin="5"/>
-            <Button x:Name="btnInterpol" Content="Интерполяция" Click="btnInterpol_Click" Grid.Column="1" Grid.Row="2" FontSize="14"/>
+            <Button x:Name="btnInterpol" Content="Интерполяция" Click="btnInterpol_Click" Grid.Column="1" Grid.Row="2" FontSize="14" Background="#FF41A8AF" BorderBrush="#FF41A8AF"/>
 
             <Image Source="/Resources/protocol_icon.png"  Grid.Column="0" Grid.Row="3" Margin="5"/>
-            <Button x:Name="btnInterpolSender" Click="btnInterpolSender_Click" Grid.Column="1" Grid.Row="3" FontSize="18">
+            <Button x:Name="btnInterpolSender" Click="btnInterpolSender_Click" Grid.Column="1" Grid.Row="3" FontSize="18" Background="#FF2E6E73" BorderBrush="#FF2E6E73">
                 <TextBlock TextWrapping="Wrap" Text="Итоговый протокол" FontSize="14"/>
             </Button>
         </Grid>

@@ -56,6 +56,7 @@ namespace Praktika.Pages
         {
             try
             {
+                svReadFile.Visibility = Visibility.Visible;
                 string fullText = File.ReadAllText(fileDirectory, Encoding.UTF8);
                 tblTextFile.Text = fullText;
             }
