@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Packaging;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
+using Praktika.Сomponents;
+
+
 
 namespace Praktika.Pages
 {
@@ -25,6 +19,7 @@ namespace Praktika.Pages
     {
         string fileDirectory = null;
         string filename = null;
+
         public HomePage()
         {
             InitializeComponent();
@@ -32,34 +27,10 @@ namespace Praktika.Pages
 
         private void btnRender_Click(object sender, RoutedEventArgs e)
         {
-            // Проверка входных данных
-            StringBuilder errors = new StringBuilder("Есть ошибки, мешающие продолжить работу: ");
-            int errorCount = 0;
+            FilesHelper.CreateFolderPath();
 
-            string numFormat = @"\d{5}"; // Регулярное выражение для проверки 5 цифр
-
-            if (string.IsNullOrEmpty(fileDirectory))
-            {
-                errors.AppendLine("Файл не открыт, сначала откройте исходный файл");
-                errorCount++;
-            }
-            if (tbModelName.Text == null || !Regex.IsMatch(tbModelName.Text, numFormat))
-            {
-                errors.AppendLine("Номер модели отсутствует или находится в неправильном формате (5 цифр)");
-                errorCount++;
-            }
-            if (tbProtocolNumber.Text == null || !Regex.IsMatch(tbProtocolNumber.Text, numFormat))
-            {
-                errors.AppendLine("Номер протокола отсутствует или находится в неправильном формате (5 цифр)");
-                errorCount++;
-            }
-
-            if (errorCount > 0)
-            {
-                MessageBox.Show(errors.ToString());
-                errors.Clear();
+            if (IsError())
                 return;
-            }
 
             try
             {
@@ -67,7 +38,7 @@ namespace Praktika.Pages
                 string[] columnsToKeep = new string[] { "N", "AList", "BEist", "Q", "FLOW_RATE", "Cx", "Cy", "Cz", "Mx", "My", "Mz", "Cxa", "Cya", "Cza", "Mxa", "Mya", "Mza", "Bx", "TVINT1", "VINT1" };
                 int[] columnIndicesToKeep = new int[columnsToKeep.Length]; // Индексы столбцов для сохранения
                 int columnIndicesCount = 0; // Счетчик для добавления индексов
-                Dictionary<int, int> columnWidths = new Dictionary<int, int>(); // Ширина столбцов
+                Dictionary<int, int> columnWidths = new Dictionary<int, int>();
                 string[] tableLines = new string[1000]; // Массив для строк таблицы (предполагаем максимум 1000 строк)
                 int tableLinesCount = 0; // Счетчик строк таблицы
                 bool isTableSection = false;
@@ -128,7 +99,7 @@ namespace Praktika.Pages
 
                 // Запись результата в новый файл
                 using (StreamReader sr = new StreamReader(fileDirectory, Encoding.UTF8))
-                using (StreamWriter sw = new StreamWriter($"Protocols/{filename}", false, Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter($"Protocols\\{filename}", false, Encoding.UTF8))
                 {
                     string pattern = @"(Protocol_Number\s+=\s+)|(ModelName\s+=\s+)|(ExpName\s+=\s+)|(PROTOCOL_DATE\s+=\s+)|(AL:\s+\d{1,2})|(PROCESSING_DATE\s+=\s+)";
                     isTableSection = false;
@@ -223,6 +194,37 @@ namespace Praktika.Pages
             {
                 MessageBox.Show($"Произошла ошибка, попробуйте ещё раз, ошибка {ex}");
             }
+        }
+        public bool IsError() // проверка входных данных 
+        {
+            StringBuilder errors = new StringBuilder("Есть ошибки, мешающие продолжить работу: ");
+            int errorCount = 0;
+
+            string numFormat = @"\d{5}"; // Регулярное выражение для проверки 5 цифр
+
+            if (string.IsNullOrEmpty(fileDirectory))
+            {
+                errors.AppendLine("Файл не открыт, сначала откройте исходный файл");
+                errorCount++;
+            }
+            if (tbModelName.Text == null || !Regex.IsMatch(tbModelName.Text, numFormat))
+            {
+                errors.AppendLine("Номер модели отсутствует или находится в неправильном формате (5 цифр)");
+                errorCount++;
+            }
+            if (tbProtocolNumber.Text == null || !Regex.IsMatch(tbProtocolNumber.Text, numFormat))
+            {
+                errors.AppendLine("Номер протокола отсутствует или находится в неправильном формате (5 цифр)");
+                errorCount++;
+            }
+
+            if (errorCount > 0)
+            {
+                MessageBox.Show(errors.ToString());
+                errors.Clear();
+                return true;
+            }
+            return false;
         }
 
         private void btnOpenFile_Click(object sender, RoutedEventArgs e)

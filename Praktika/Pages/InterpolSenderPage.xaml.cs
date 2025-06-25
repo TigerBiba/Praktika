@@ -1,22 +1,15 @@
 ﻿using Microsoft.Win32;
+using Praktika.Сomponents;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Praktika.Pages
 {
@@ -28,6 +21,7 @@ namespace Praktika.Pages
         List<string> filesNames = new();
         List<string> filesDirectores = new();
         Dictionary<string, int> filesAndLambda = new();
+
         public InterpolSenderPage()
         {
             InitializeComponent();
@@ -46,7 +40,7 @@ namespace Praktika.Pages
                 dialog.Filter = "Text documents (*.txt)|*.txt";
                 dialog.FilterIndex = 1;
                 dialog.Multiselect = true;
-                dialog.InitialDirectory = "Protocols\\";
+                dialog.InitialDirectory = FilesHelper.ReturnFolderPath();
 
                 Nullable<bool> result = dialog.ShowDialog();
 
@@ -104,6 +98,8 @@ namespace Praktika.Pages
 
         private void btnInterpolSenderExecute_Click(object sender, RoutedEventArgs e)
         {
+            FilesHelper.CreateFolderPath();
+
             List<double> allBx = new();
             string tableHeader = null;
             int bxIndex = default;
@@ -116,7 +112,7 @@ namespace Praktika.Pages
             try
             {
                 using (StreamReader sr = new StreamReader(filesDirectores[0], Encoding.UTF8))
-                using (StreamWriter sw = new StreamWriter($@"Protocols/Final_protocol.txt", false, Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(FilesHelper.ReturnFolderPath() + $@"\Final_protocol.txt", false, Encoding.UTF8))
                 {
                     double bx = default;
                     bool isTable = false;
@@ -162,7 +158,7 @@ namespace Praktika.Pages
                     }
                 }
 
-                using (StreamWriter sw = new StreamWriter($@"Protocols/Final_protocol.txt", true, Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(FilesHelper.ReturnFolderPath() + $@"\Final_protocol.txt", true, Encoding.UTF8))
                 {
                     for (int i = 0; i < allBx.Count; i++)
                     {
