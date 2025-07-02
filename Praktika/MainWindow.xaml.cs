@@ -24,7 +24,7 @@ namespace Praktika
         public MainWindow()
         {
             InitializeComponent();
-            FrmMain.Navigate(new HomePage());
+            FrmMain.Navigate(new protocolConversionPage());
         }
     }
 }

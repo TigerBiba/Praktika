@@ -9,10 +9,10 @@
       Title="InterpolSenderPage">
 
     <Grid>
-        <Label Content="Выберите файлы для выборки" HorizontalAlignment="Left" Margin="311,38,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="btnEnterFiles" Content="Выбрать файлы" HorizontalAlignment="Left" Margin="352,69,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.297,-0.548" Height="27" Width="96" Click="btnEnterFiles_Click"/>
-        <TextBlock x:Name="tbFilesNames" HorizontalAlignment="Center" Margin="0,101,0,0" TextWrapping="Wrap" Text="Выбранные файлы: " VerticalAlignment="Top" Height="92" Width="178"/>
-        <Button x:Name="btnInterpolSenderExecute" Content="Сделать выборку" HorizontalAlignment="Center" Margin="0,198,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.297,-0.548" Height="27" Width="96" Click="btnInterpolSenderExecute_Click"/>
+        <Label Content="Выберите файлы для выборки" HorizontalAlignment="Center" Margin="0,38,0,0" VerticalAlignment="Top" Width="178"/>
+        <Button x:Name="btnEnterFiles" Content="Выбрать файлы" HorizontalAlignment="Center" Margin="0,69,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.297,-0.548" Height="40" Width="130" Click="btnEnterFiles_Click" Background="#FF41A8AF"/>
+        <TextBlock x:Name="tbFilesNames" HorizontalAlignment="Center" Margin="0,124,0,0" TextWrapping="Wrap" Text="Выбранные файлы: " VerticalAlignment="Top" Height="136" Width="178"/>
+        <Button x:Name="btnInterpolSenderExecute" Content="Сделать выборку" HorizontalAlignment="Center" Margin="0,274,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.297,-0.548" Height="40" Width="130" Click="btnInterpolSenderExecute_Click" Background="#FF41A8AF"/>
 
         <Grid HorizontalAlignment="Left" Width="210" Background="#FF41A8AF">
 

@@ -7,15 +7,15 @@ using System.IO;
 
 namespace Praktika.Сomponents
 {
-    internal class FilesHelper
+    internal class DirectoryHelper
     {
         readonly static string folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Protocols");
         public static void CreateFolderPath()
         {
-            if (!Directory.Exists(FilesHelper.folderPath))
-                Directory.CreateDirectory(FilesHelper.folderPath);
+            if (!Directory.Exists(DirectoryHelper.folderPath))
+                Directory.CreateDirectory(DirectoryHelper.folderPath);
         }
 
-        public static string ReturnFolderPath() => FilesHelper.folderPath;
+        public static string ReturnFolderPath() => DirectoryHelper.folderPath;
     }
 }

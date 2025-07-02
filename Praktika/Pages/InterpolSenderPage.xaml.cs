@@ -27,6 +27,17 @@ namespace Praktika.Pages
             InitializeComponent();
         }
 
+        public void GetFilesAndLambda(string line, string filePath, ref Dictionary<string, int> filesAndLambda)
+        {
+            string pattern = @"AL:\s+\d{1,2}";
+
+            if (Regex.IsMatch(line, pattern))
+            {
+                var al = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                filesAndLambda.Add(filePath, int.Parse(al[1]));
+            }
+        }
+
         private void btnEnterFiles_Click(object sender, RoutedEventArgs e)
         {
             filesNames.Clear();
@@ -40,13 +51,12 @@ namespace Praktika.Pages
                 dialog.Filter = "Text documents (*.txt)|*.txt";
                 dialog.FilterIndex = 1;
                 dialog.Multiselect = true;
-                dialog.InitialDirectory = FilesHelper.ReturnFolderPath();
+                dialog.InitialDirectory = DirectoryHelper.ReturnFolderPath();
 
                 Nullable<bool> result = dialog.ShowDialog();
 
                 if (result == true)
                 {
-                    string pattern = @"AL:\s+\d{1,2}";
                     foreach (var filePath in dialog.FileNames)
                     {
                         using (StreamReader sr = new(filePath, Encoding.UTF8))
@@ -54,12 +64,8 @@ namespace Praktika.Pages
                             while (!sr.EndOfStream)
                             {
                                 string line = sr.ReadLine();
-                                if (Regex.IsMatch(line, pattern))
-                                {
-                                    var al = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                                    filesAndLambda.Add(filePath, int.Parse(al[1]));
-                                    break;
-                                }
+
+                                GetFilesAndLambda(line, filePath, ref filesAndLambda);
                             }
                         }
                         filesDirectores.Add(filePath);
@@ -88,7 +94,7 @@ namespace Praktika.Pages
 
         private void ConverterPage_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new HomePage());
+            NavigationService.Navigate(new protocolConversionPage());
         }
 
         private void btnInterpol_Click(object sender, RoutedEventArgs e)
@@ -98,7 +104,7 @@ namespace Praktika.Pages
 
         private void btnInterpolSenderExecute_Click(object sender, RoutedEventArgs e)
         {
-            FilesHelper.CreateFolderPath();
+            DirectoryHelper.CreateFolderPath();
 
             List<double> allBx = new();
             string tableHeader = null;
@@ -106,24 +112,23 @@ namespace Praktika.Pages
 
             if (filesAndLambda == null || filesAndLambda.Count < 2 || filesDirectores == null || filesDirectores.Count < 2)
             {
-                MessageBox.Show("Фалы не выбраны или выбран только 1 файл");
+                MessageBox.Show("Файлы не выбраны или выбран только 1 файл");
                 return;
             }
             try
             {
                 using (StreamReader sr = new StreamReader(filesDirectores[0], Encoding.UTF8))
-                using (StreamWriter sw = new StreamWriter(FilesHelper.ReturnFolderPath() + $@"\Final_protocol.txt", false, Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(DirectoryHelper.ReturnFolderPath() + $@"\Final_protocol.txt", false, Encoding.UTF8))
                 {
                     double bx = default;
                     bool isTable = false;
-
 
                     while (!sr.EndOfStream)
                     {
                         string line = sr.ReadLine();
                         string[] headers = null;
 
-                        if (line.TrimStart().StartsWith("N ") && !isTable)
+                        if (line.TrimStart().StartsWith("N "))
                         {
                             isTable = true;
                             tableHeader = line;
@@ -158,7 +163,7 @@ namespace Praktika.Pages
                     }
                 }
 
-                using (StreamWriter sw = new StreamWriter(FilesHelper.ReturnFolderPath() + $@"\Final_protocol.txt", true, Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(DirectoryHelper.ReturnFolderPath() + $@"\Final_protocol.txt", true, Encoding.UTF8))
                 {
                     for (int i = 0; i < allBx.Count; i++)
                     {
@@ -193,7 +198,6 @@ namespace Praktika.Pages
             }
             catch (Exception ex)
             {
-
                 MessageBox.Show($"Произошла ошибка{ex}");
             }
         }

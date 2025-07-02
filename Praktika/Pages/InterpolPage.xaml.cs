@@ -33,7 +33,7 @@ namespace Praktika.Pages
 
         private void btnInterpolExecute_Click(object sender, RoutedEventArgs e)
         {
-            FilesHelper.CreateFolderPath();
+            DirectoryHelper.CreateFolderPath();
 
             double[] x2Numbers = TryX2Number();
 
@@ -103,7 +103,7 @@ namespace Praktika.Pages
             try
             {
                 using (StreamReader sr = new StreamReader(fileDirectory, Encoding.UTF8))
-                using (StreamWriter sw = new StreamWriter(FilesHelper.ReturnFolderPath() + @$"\{"Interpolate_protocol_" + fileName}", false, Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(DirectoryHelper.ReturnFolderPath() + @$"\{"Interpolate_protocol_" + fileName}", false, Encoding.UTF8))
                 {
                     bool isTable = false;
                     int resultIndex = 0; // Индекс для прохода по interpolatedResults
@@ -216,7 +216,7 @@ namespace Praktika.Pages
                     }
                 }
 
-                fileDirectory = FilesHelper.ReturnFolderPath() + $@"\{"Interpolate_protocol_" + fileName}";
+                fileDirectory = DirectoryHelper.ReturnFolderPath() + $@"\{"Interpolate_protocol_" + fileName}";
 
                 MessageBox.Show("Интерполяция выполнена успешно");
             }
@@ -224,28 +224,27 @@ namespace Praktika.Pages
             {
                 MessageBox.Show($"Произошла ошибка при попытке записи файла: {ex}");
             }
-            
         }
 
         private void btnFileOpen_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (File.Exists(fileDirectory))
-                {
-                    Process process = new Process();
-                    process.StartInfo.FileName = "explorer";
-                    process.StartInfo.Arguments = "\"" + fileDirectory + "\"";
-                    process.Start();
-                }
-                else
-                {
-                    Console.WriteLine($"Файл не найден: {fileDirectory}");
-                }
+                if (fileDirectory == null)
+                    throw new ArgumentNullException();
+
+                Process process = new Process();
+                process.StartInfo.FileName = "explorer";
+                process.StartInfo.Arguments = "\"" + fileDirectory + "\"";
+                process.Start();
+            }
+            catch(ArgumentNullException)
+            {
+                MessageBox.Show("Ошибка. Файл не выбран");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ошибка при открытии файла: {ex.Message}");
+                MessageBox.Show($"Ошибка при открытии файла: {ex.Message}");
             }
         }
         public double[] TryX2Number()
@@ -329,7 +328,7 @@ namespace Praktika.Pages
 
         public static Dictionary<string, List<double>> GetOutputColumnData(string[] columnNames, double[] x2Numbers, Dictionary<double, (double x1, double x3, int indexLeft, int indexRight)> xValues, Dictionary<string, List<double>> inputCoulmnsData)
         {
-            Dictionary<string, List<double>> outputColumnData = new Dictionary<string, List<double>>(); // изменённые значения
+            Dictionary<string, List<double>> outputColumnData = new();
 
             try
             {
@@ -346,13 +345,13 @@ namespace Praktika.Pages
                     {
                         if (column == "Bx")
                         {
-                            outputColumnData["Bx"].Add(x2); // Для Bx просто добавляем x2
+                            outputColumnData["Bx"].Add(x2);
                             continue;
                         }
 
                         double y1 = inputCoulmnsData[column][indexLeft];
                         double y3 = inputCoulmnsData[column][indexRight];
-                        double y2 = ((x2 - x1) * (y3 - y1)) / (x3 - x1); // Формула интерполяции
+                        double y2 = ((x2 - x1) * (y3 - y1)) / (x3 - x1);
                         outputColumnData[column].Add(y2);
                     }
                 }
@@ -370,7 +369,7 @@ namespace Praktika.Pages
 
             dialog.Filter = "Text documents (*.txt)|*.txt";
             dialog.FilterIndex = 1;
-            dialog.InitialDirectory = FilesHelper.ReturnFolderPath();
+            dialog.InitialDirectory = DirectoryHelper.ReturnFolderPath();
 
             Nullable<bool> result = dialog.ShowDialog();
 
@@ -386,19 +385,23 @@ namespace Praktika.Pages
         {
             try
             {
-                svReadFile.Visibility = Visibility.Visible;
                 string fullText = File.ReadAllText(fileDirectory, Encoding.UTF8);
                 tblTextFile.Text = fullText;
+                svReadFile.Visibility = Visibility.Visible;
             }
-            catch (Exception ex)
+            catch (ArgumentNullException)
             {
-                MessageBox.Show($"Ошибка при чтении файла: {ex.Message}");
+                MessageBox.Show($"Ошибка, файл не выбран");
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show($"Ошибка: {ex}");
             }
         }
 
         private void ConverterPage_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new HomePage());
+            NavigationService.Navigate(new protocolConversionPage());
         }
 
         private void btnInterpolSender_Click(object sender, RoutedEventArgs e)
