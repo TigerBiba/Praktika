@@ -12,10 +12,10 @@ namespace Praktika.Сomponents
         readonly static string folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Protocols");
         public static void CreateFolderPath()
         {
-            if (!Directory.Exists(DirectoryHelper.folderPath))
-                Directory.CreateDirectory(DirectoryHelper.folderPath);
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
         }
 
-        public static string ReturnFolderPath() => DirectoryHelper.folderPath;
+        public static string ReturnFolderPath() => folderPath;
     }
 }

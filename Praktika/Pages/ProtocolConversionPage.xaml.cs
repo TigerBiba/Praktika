@@ -43,12 +43,6 @@ namespace Praktika.Pages
 
             try
             {
-                //int[] columnIndicesToKeep; // Индексы столбцов для сохранения
-                //int columnIndicesCount; //счётчик нацденных индексов
-                //Dictionary<int, int> columnWidths; //ключ - индекс столбца, значение его макс ширина
-                //List<string> tableLines;
-                //int tableLinesCount;
-
                 GetColumnWidthForFile(fileDirectory, out int[] columnIndicesToKeep, out int columnIndicesCount, out Dictionary<int, int> columnWidths, out List<string> tableLines, out int tableLinesCount);
 
                 using (StreamReader sr = new StreamReader(fileDirectory, Encoding.UTF8))
@@ -63,8 +57,8 @@ namespace Praktika.Pages
 
                         if (!isTableSection)
                         {
-                            line = WriteHeaderAndFindTable(line, columnIndicesCount, columnIndicesToKeep, columnWidths, protocolNumber, modelName, out isTableSection);
-                            
+                            line = WriteHeaderAndFindTable(line, columnIndicesCount, columnIndicesToKeep, columnWidths, protocolNumber, modelName, ref isTableSection);
+
                             if (line != null)
                                 sw.WriteLine(line);
                         }
@@ -78,111 +72,58 @@ namespace Praktika.Pages
                     }
                 }
 
-                MessageBox.Show("Успешное преобразование файла");
+                MessageBox.Show("Успешное преобразование файла", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (ArgumentNullException)
             {
-                MessageBox.Show("Ошибка. Файл для редактирования не выбран");
+                MessageBox.Show("Ошибка. Файл для редактирования не выбран", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (IOException)
+            {
+                MessageBox.Show("Ошибка, нельзя форматировать файл из корневой папки, выберите файл из другой папки и после форматирования он появится в корневой папке", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Произошла ошибка: {ex}");
+                MessageBox.Show($"Произошла ошибка: {ex}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
-        static string WriteTableRow(string line, List<string> tableLines, int columnIndicesCount, int[] columnIndicesToKeep, Dictionary<int, int> columnWidths,ref int tableLineIndex, int tableLinesCount)
+        public static void GetColumnWidthForFile(string fileDirectory, out int[] columnIndicesToKeep, out int columnIndicesCount, out Dictionary<int, int> columnWidths, out List<string> tableLines, out int tableLinesCount)
         {
-
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                return " ";
-            }
-
-            if (tableLineIndex == 0 || tableLineIndex == tableLinesCount - 1)
-            {
-                tableLineIndex++;
-                return null;
-            }
-
-            string[] columns = tableLines[tableLineIndex].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            string[] filteredColumns = new string[columnIndicesCount];
-            tableLineIndex++;
-
-            for (int i = 0; i < columnIndicesCount; i++)
-            {
-                int columnIndex = columnIndicesToKeep[i];
-                if (columnIndex < columns.Length)
-                {
-                    if (i == 0)
-                        filteredColumns[i] = columns[columnIndex];
-                    else
-                        filteredColumns[i] = columns[columnIndex].PadLeft(columnWidths[columnIndex]);
-                }
-            }
-
-            return(string.Join("    ", filteredColumns));
-        }
-        static string WriteHeaderAndFindTable(string line, int columnIndicesCount, int[] columnIndicesToKeep, Dictionary<int, int> columnWidths, string protocolNumber, string modelName, out bool isTableSection)
-        {
-            isTableSection = false;
-
-            if (line.TrimStart().StartsWith("N "))
-            {
-                isTableSection = true;
-                string[] headers = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                string[] filteredHeaders = new string[columnIndicesCount];
-
-                for (int i = 0; i < columnIndicesCount; i++)
-                {
-                    int columnIndex = columnIndicesToKeep[i];
-                    if (i == 0)
-                        filteredHeaders[i] = headers[columnIndex];
-                    else
-                        filteredHeaders[i] = headers[columnIndex].PadLeft(columnWidths[columnIndex]);
-                }
-
-                return (string.Join("    ", filteredHeaders));
-            }
-            else
-            {
-                line = ReplaceLineIfMatch(line, protocolNumber, modelName);
-
-                if (line != null)
-                    return (line);
-            }
-
-            isTableSection = false;
-            return (null);
-        }
-
-        public static string ReplaceLineIfMatch(string line, string protocolNumber, string modelName)
-        {
-            string pattern = @"(Protocol_Number\s+=\s+)|(ModelName\s+=\s+)|(ExpName\s+=\s+)|(PROTOCOL_DATE\s+=\s+)|(AL:\s+\d{1,2})|(PROCESSING_DATE\s+=\s+)";
-
-            Match match = Regex.Match(line, pattern);
-            if (match.Success)
-            {
-                if (match.Groups[1].Success)
-                    return ($"Protocol_Number = {protocolNumber}");
-                else if (match.Groups[2].Success)
-                    return ($"ModelName = {modelName}");
-                else if (match.Groups[3].Success)
-                    return ("ExpName = Практика");
-                else if (match.Groups[6].Success)
-                    return ($"PROCESSING_DATE = {DateTime.Now}");
-                else
-                    return (line);
-            }
-            return null;
-        }
-
-        public static void ParseHeadereLine(string line, out int[] columnIndicesToKeep, out int columnIndicesCount, out Dictionary<int, int> columnWidths)
-        {
-            string[] columnsToKeep = { "N", "AList", "BEist", "Q", "FLOW_RATE", "Cx", "Cy", "Cz", "Mx", "My", "Mz", "Cxa", "Cya", "Cza", "Mxa", "Mya", "Mza", "Bx", "TVINT1", "VINT1" };
-            
-            columnIndicesToKeep = new int[columnsToKeep.Length]; // Индексы столбцов для сохранения
+            columnIndicesToKeep = null; // Индексы столбцов для сохранения
             columnIndicesCount = 0; //счётчик нацденных индексов
             columnWidths = new(); //ключ - индекс столбца, значение его макс ширина
+            tableLines = new();
+            tableLinesCount = 0;
+            bool isTableSection = false;
+
+            using (StreamReader sr = new(fileDirectory, Encoding.UTF8))
+            {
+                while (!sr.EndOfStream)
+                {
+                    string line = sr.ReadLine();
+
+                    if (!isTableSection)
+                    {
+                        if (line.TrimStart().StartsWith("N "))
+                        {
+                            isTableSection = true;
+                            ParseHeadereLine(line, ref columnIndicesToKeep, ref columnIndicesCount, ref columnWidths);
+                        }
+                    }
+                    else if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        tableLines.Add(line);
+                        tableLinesCount++;
+
+                        ParseTableLine(line, columnIndicesCount, columnIndicesToKeep, ref columnWidths);
+                    }
+                }
+            }
+        }
+        public static void ParseHeadereLine(string line, ref int[] columnIndicesToKeep, ref int columnIndicesCount, ref Dictionary<int, int> columnWidths)
+        {
+            string[] columnsToKeep = { "N", "AList", "BEist", "Q", "FLOW_RATE", "Cx", "Cy", "Cz", "Mx", "My", "Mz", "Cxa", "Cya", "Cza", "Mxa", "Mya", "Mza", "Bx", "TVINT1", "VINT1" };
+            columnIndicesToKeep = new int[columnsToKeep.Length];
 
             string[] headers = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -217,40 +158,89 @@ namespace Praktika.Pages
             }
         }
 
-        public static void GetColumnWidthForFile(string fileDirectory, out int[] columnIndicesToKeep, out int columnIndicesCount, out Dictionary<int, int> columnWidths, out List<string> tableLines, out int tableLinesCount)
+        static string WriteHeaderAndFindTable(string line, int columnIndicesCount, int[] columnIndicesToKeep, Dictionary<int, int> columnWidths, string protocolNumber, string modelName, ref bool isTableSection)
         {
-            string[] columnsToKeep = { "N", "AList", "BEist", "Q", "FLOW_RATE", "Cx", "Cy", "Cz", "Mx", "My", "Mz", "Cxa", "Cya", "Cza", "Mxa", "Mya", "Mza", "Bx", "TVINT1", "VINT1" };
-
-            columnIndicesToKeep = new int[columnsToKeep.Length]; // Индексы столбцов для сохранения
-            columnIndicesCount = 0; //счётчик нацденных индексов
-            columnWidths = new(); //ключ - индекс столбца, значение его макс ширина
-            tableLines = new();
-            tableLinesCount = 0;
-            bool isTableSection = false;
-
-            using (StreamReader sr = new(fileDirectory, Encoding.UTF8))
+            if (line.TrimStart().StartsWith("N "))
             {
-                while (!sr.EndOfStream)
+                isTableSection = true;
+                string[] headers = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] filteredHeaders = new string[columnIndicesCount];
+
+                for (int i = 0; i < columnIndicesCount; i++)
                 {
-                    string line = sr.ReadLine();
+                    int columnIndex = columnIndicesToKeep[i];
+                    if (i == 0)
+                        filteredHeaders[i] = headers[columnIndex];
+                    else
+                        filteredHeaders[i] = headers[columnIndex].PadLeft(columnWidths[columnIndex]);
+                }
 
-                    if (!isTableSection)
-                    {
-                        if (line.TrimStart().StartsWith("N "))
-                        {
-                            isTableSection = true;
-                            ParseHeadereLine(line, out columnIndicesToKeep, out columnIndicesCount, out columnWidths);
-                        }
-                    }
-                    else if (!string.IsNullOrWhiteSpace(line))
-                    {
-                        tableLines.Add(line);
-                        tableLinesCount++;
+                return (string.Join("    ", filteredHeaders));
+            }
+            else
+            {
+                line = ReplaceLineIfMatch(line, protocolNumber, modelName);
 
-                        ParseTableLine(line, columnIndicesCount, columnIndicesToKeep, ref columnWidths);
-                    }
+                if (line != null)
+                    return (line);
+            }
+
+            isTableSection = false;
+            return (null);
+        }
+
+        static string WriteTableRow(string line, List<string> tableLines, int columnIndicesCount, int[] columnIndicesToKeep, Dictionary<int, int> columnWidths,ref int tableLineIndex, int tableLinesCount)
+        {
+
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                return " ";
+            }
+
+            if (tableLineIndex == 0 || tableLineIndex == tableLinesCount - 1)
+            {
+                tableLineIndex++;
+                return null;
+            }
+
+            string[] columns = tableLines[tableLineIndex].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] filteredColumns = new string[columnIndicesCount];
+            tableLineIndex++;
+
+            for (int i = 0; i < columnIndicesCount; i++)
+            {
+                int columnIndex = columnIndicesToKeep[i];
+                if (columnIndex < columns.Length)
+                {
+                    if (i == 0)
+                        filteredColumns[i] = columns[columnIndex];
+                    else
+                        filteredColumns[i] = columns[columnIndex].PadLeft(columnWidths[columnIndex]);
                 }
             }
+
+            return(string.Join("    ", filteredColumns));
+        }
+
+        public static string ReplaceLineIfMatch(string line, string protocolNumber, string modelName)
+        {
+            string pattern = @"(Protocol_Number\s+=\s+)|(ModelName\s+=\s+)|(ExpName\s+=\s+)|(PROTOCOL_DATE\s+=\s+)|(AL:\s+\d{1,2})|(PROCESSING_DATE\s+=\s+)";
+
+            Match match = Regex.Match(line, pattern);
+            if (match.Success)
+            {
+                if (match.Groups[1].Success)
+                    return ($"Protocol_Number = {protocolNumber}");
+                else if (match.Groups[2].Success)
+                    return ($"ModelName = {modelName}");
+                else if (match.Groups[3].Success)
+                    return ("ExpName = Практика");
+                else if (match.Groups[6].Success)
+                    return ($"PROCESSING_DATE = {DateTime.Now}");
+                else
+                    return (line);
+            }
+            return null;
         }
 
         public bool IsError() // проверка входных данных 
@@ -273,7 +263,7 @@ namespace Praktika.Pages
 
             if (errorCount > 0)
             {
-                MessageBox.Show(errors.ToString());
+                MessageBox.Show(errors.ToString(), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 errors.Clear();
                 return true;
             }

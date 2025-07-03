@@ -24,11 +24,12 @@
         <TextBox x:Name="tbFourthX2" HorizontalAlignment="Left" Margin="362,225,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="99"/>
         <TextBox x:Name="tbFifthX2" HorizontalAlignment="Left" Margin="362,249,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="99"/>
         <TextBox x:Name="tbSixthX2" HorizontalAlignment="Left" Margin="362,275,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="99"/>
-        <Button x:Name="btnInterpolExecute" Content="Выполнить интерполяцию" HorizontalAlignment="Left" Margin="332,304,0,0" Click="btnInterpolExecute_Click"  VerticalAlignment="Top" Height="40" Width="150" Background="#FF41A8AF"/>
-        <Button x:Name="btnFileOpen" Content="Открыть файл в редакторе" HorizontalAlignment="Left" Margin="240,354,0,0" Click="btnFileOpen_Click"  VerticalAlignment="Top" Height="40" Width="160" Background="#FF41A8AF"/>
-        <Button x:Name="btnReadFile" Content="Просмотреть файл" HorizontalAlignment="Left" Margin="407,354,0,0" Click="btnReadFile_Click"  VerticalAlignment="Top" Height="40" Width="160" Background="#FF41A8AF"/>
-        <ScrollViewer x:Name="svReadFile" HorizontalScrollBarVisibility="Auto"  VerticalScrollBarVisibility="Auto" Margin="536,66,5,126" Visibility="Visible">
-            <TextBlock x:Name="tblTextFile" TextWrapping="NoWrap" FontFamily="Consolas" xml:space="preserve" Height="246" Width="249"/>
+        <Button x:Name="btnInterpolExecute" Content="Выполнить интерполяцию" HorizontalAlignment="Left" Margin="330,304,0,0" Click="btnInterpolExecute_Click"  VerticalAlignment="Top" Height="40" Width="152" Background="#FF41A8AF"/>
+        <Button x:Name="btnFileOpenInExp" Content="Открыть файл в редакторе" HorizontalAlignment="Left" Margin="248,355,0,0" Click="btnFileOpenInExp_Click"  VerticalAlignment="Top" Height="40" Width="152" Background="#FF41A8AF" Visibility="Hidden"/>
+        <Button x:Name="btnReadFile" Content="Просмотреть файл" HorizontalAlignment="Left" Margin="406,355,0,0" Click="btnReadFile_Click"  VerticalAlignment="Top" Height="40" Width="152" Background="#FF41A8AF" Visibility="Hidden"/>
+
+        <ScrollViewer x:Name="svReadFile" HorizontalScrollBarVisibility="Auto"  VerticalScrollBarVisibility="Auto" Margin="561,66,5,126" Visibility="Visible">
+            <TextBlock x:Name="tblTextFile" TextWrapping="NoWrap" FontFamily="Consolas"/>
         </ScrollViewer>
 
         <Grid HorizontalAlignment="Left" Width="210" Background="#FF41A8AF">

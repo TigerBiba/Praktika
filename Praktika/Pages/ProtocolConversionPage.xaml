@@ -10,7 +10,7 @@
 
     <Grid>
         <Button x:Name="btnOpenFile" Content="Выбрать файл" HorizontalAlignment="Left" Margin="339,54,0,0" Width="130" Click="btnOpenFile_Click"  Height="40" VerticalAlignment="Top" Background="#FF41A8AF"/>
-        <Label x:Name="lbFilename" Content="Файл: " HorizontalAlignment="Center" Margin="0,98,0,0" VerticalAlignment="Top" Width="122"/>
+        <Label x:Name="lbFilename" Content="Файл: " HorizontalAlignment="Left" Margin="339,98,0,0" Width="122" Height="26" VerticalAlignment="Top"/>
         <Button x:Name="btnRender" Content="Отредактировать" HorizontalAlignment="Left" Margin="339,244,0,0" Width="130" Click="btnRender_Click"  Height="40" VerticalAlignment="Top" Background="#FF41A8AF"/>
         <TextBox x:Name="tbProtocolNumber" HorizontalAlignment="Left" Margin="339,155,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="130"/>
         <Label Content="Введите номер протокола" HorizontalAlignment="Left" Margin="327,124,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.07,-0.331"/>

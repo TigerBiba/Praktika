@@ -27,17 +27,6 @@ namespace Praktika.Pages
             InitializeComponent();
         }
 
-        public void GetFilesAndLambda(string line, string filePath, ref Dictionary<string, int> filesAndLambda)
-        {
-            string pattern = @"AL:\s+\d{1,2}";
-
-            if (Regex.IsMatch(line, pattern))
-            {
-                var al = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                filesAndLambda.Add(filePath, int.Parse(al[1]));
-            }
-        }
-
         private void btnEnterFiles_Click(object sender, RoutedEventArgs e)
         {
             filesNames.Clear();
@@ -53,7 +42,7 @@ namespace Praktika.Pages
                 dialog.Multiselect = true;
                 dialog.InitialDirectory = DirectoryHelper.ReturnFolderPath();
 
-                Nullable<bool> result = dialog.ShowDialog();
+                bool? result = dialog.ShowDialog();
 
                 if (result == true)
                 {
@@ -82,24 +71,19 @@ namespace Praktika.Pages
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"ПРоизошла ошибка: {ex}");
+                MessageBox.Show($"Произошла ошибка: {ex}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             
         }
-
-        private void btnInterpolSender_Click(object sender, RoutedEventArgs e)
+        public void GetFilesAndLambda(string line, string filePath, ref Dictionary<string, int> filesAndLambda)
         {
-            
-        }
+            string pattern = @"AL:\s+\d{1,2}";
 
-        private void ConverterPage_Click(object sender, RoutedEventArgs e)
-        {
-            NavigationService.Navigate(new protocolConversionPage());
-        }
-
-        private void btnInterpol_Click(object sender, RoutedEventArgs e)
-        {
-            NavigationService.Navigate(new InterpolPage());
+            if (Regex.IsMatch(line, pattern))
+            {
+                var al = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                filesAndLambda.Add(filePath, int.Parse(al[1]));
+            }
         }
 
         private void btnInterpolSenderExecute_Click(object sender, RoutedEventArgs e)
@@ -110,13 +94,17 @@ namespace Praktika.Pages
             string tableHeader = null;
             int bxIndex = default;
 
-            if (filesAndLambda == null || filesAndLambda.Count < 2 || filesDirectores == null || filesDirectores.Count < 2)
-            {
-                MessageBox.Show("Файлы не выбраны или выбран только 1 файл");
-                return;
-            }
             try
             {
+                if (filesDirectores.Count == 0)
+                    throw new ArgumentNullException();
+
+                if (filesAndLambda.Count < 2 || filesDirectores.Count < 2)
+                {
+                    MessageBox.Show("Ошибка, выбранно меньше 2-х файлов, или в файлах не найдена лямбда", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
                 using (StreamReader sr = new StreamReader(filesDirectores[0], Encoding.UTF8))
                 using (StreamWriter sw = new StreamWriter(DirectoryHelper.ReturnFolderPath() + $@"\Final_protocol.txt", false, Encoding.UTF8))
                 {
@@ -153,7 +141,7 @@ namespace Praktika.Pages
                                 }
                                 else
                                 {
-                                    MessageBox.Show("Ошибка в чтении файла, Bx был неверного формата");
+                                    MessageBox.Show("Ошибка в чтении файла, Bx был неверного формата", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
                             }
@@ -177,13 +165,17 @@ namespace Praktika.Pages
                                 while (!sr.EndOfStream)
                                 {
                                     string line = sr.ReadLine();
+
                                     if (line.TrimStart().StartsWith("N "))
                                         IsTable = true;
+
                                     else if (IsTable)
                                     {
                                         if (string.IsNullOrWhiteSpace(line))
                                             continue;
+
                                         var tableLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
                                         if (Double.TryParse(tableLine[bxIndex], CultureInfo.InvariantCulture, out double parsedValue) && allBx[i] == parsedValue)
                                         {
                                             sw.WriteLine(line);
@@ -195,11 +187,30 @@ namespace Praktika.Pages
                         sw.WriteLine();
                     }
                 }
+                MessageBox.Show("Успешное создание итогового файла", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch(ArgumentNullException)
+            {
+                MessageBox.Show("Ошибка, файл не выбран", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Произошла ошибка{ex}");
+                MessageBox.Show($"Произошла ошибка{ex}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void ConverterPage_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new protocolConversionPage());
+        }
+
+        private void btnInterpol_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new InterpolPage());
+        }
+        private void btnInterpolSender_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
